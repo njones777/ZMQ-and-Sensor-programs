@@ -1,6 +1,6 @@
 The purpose of these programs were to provide the my team with a means of 
 sending files and to help test bandwidth, latency and, program execution time
-across multipel different types of devices. Such devices included, raspberry pis,
+across multipel different types of devices. Such devices included, Raspberry Pis,
 HPC systems, laptops, and micro controllers. These programs took advantage of [ZMQ](https://zeromq.org/),
 a high-peformance messaging library that provides sockets and patterns for building
 distributed and scalable applications. It helped to simply the complexity of our projects
