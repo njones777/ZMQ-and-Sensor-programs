@@ -1,4 +1,4 @@
-### WHY
+### Why:
 ---
 The purpose of these programs were to provide the my team with a means of 
 sending files and to help test bandwidth, latency and, program execution time
