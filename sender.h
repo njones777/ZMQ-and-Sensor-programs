@@ -1,11 +1,17 @@
 /**
-* Header that provides additonal functionaly and helper functions for 'supplicant.c'
+* This program is a part of the FSCI program SMURF project 
+*
+* sender.h - provides additonal functionaly and helper functions for 'supplicant.c'
 * file. Includes various libraries, defines constants, funcitons to aid in file operations
-* and socket handling
-
-
+* and socket handling.
+*
 *@author Noah Jones <noahjones7771031@gmail.com>, <nmjones@lps.umd.edu>
+
 **/
+
+#ifndef SENDER_H
+#define SENDER_H
+
 #include <zmq.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -21,8 +27,7 @@
 #define FILE_CHUNK_SIZE 1048576 //1MB
 #define BUFFER_SIZE 256
 
-
-//Variables for program performance
+//Variables for program performance (execution time of file transfer operation)
     struct timeval start_time, end_time;
     double execution_time;
 
@@ -63,8 +68,6 @@ char* getFileSizeH(long size){
 
     return result;}
 
-
-
 //Function that handles socket creation and binding to help make main code cleaner
 void* bind_socket(void *context, const char *server_address){
 	void *socket = zmq_socket(context, ZMQ_PAIR);
@@ -82,8 +85,7 @@ void* bind_socket(void *context, const char *server_address){
 		zmq_close(socket);}
 	
 	//Return pointer to socket
-	return socket;
-}
+	return socket;}
 
 //function to receive requested file and attempt to send requested file back
 int send_file_to_requester(void *socket, char *path){
@@ -113,10 +115,11 @@ int send_file_to_requester(void *socket, char *path){
 	//RECORD START TIME OF FILE TRANSFER
     	gettimeofday(&start_time, NULL);
 	
-	//move the file position indicator to the endof the file specified by the FILE pointer file
+	//move the file position indicator to the end of the file specified by the FILE pointer file
 	fseek(file, 0, SEEK_END);
 	//determine the current position of the file position indicator
 	long file_size = ftell(file);
+	//reset file position indicatior to the beginning of the file 
 	rewind(file);
 	
 	//send the file size to the receiver
@@ -140,19 +143,5 @@ int send_file_to_requester(void *socket, char *path){
                      
     	//print file size and execution time of file transfer          
     	printf("File of size %s, transfered to requester in  %.2f seconds\n", getFileSizeH(file_size), execution_time);
-	return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	return 0;}
+#endif

@@ -1,24 +1,23 @@
 /**
 * This program is a part of the FSCI program SMURF project.
 *
-* This program is meant to server two purposes; A general purpose 
+* This program is meant to serve two purposes; A general purpose 
 * file transfer tool using ZMQ and a network bandwidth measurment tool
-* to help find and measure potential bottlenecks within networks.
+* to help find and measure potential bottlenecks within networks in order
+* to.
+*
+* This in intended to be run on a worker and or sensor waiting for a manager 
+* to tell it that it needs a fresh set of data to run operations on.
 *
 * @author Noah Jones <noahjones7771031@gmail.com>, <nmjones@lps.umd.edu>
+*
 **/
-
-/* This in intended to be run on a worker and or sensor waiting for a manager to tell
-   it that it needs a fresh set of data to run operations on.
- */
-
 
 #include <zmq.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <sender.h>
-
 
 #define BANDWIDTH_INCREMENT_TEST 0
 #define increment_size 10
@@ -33,21 +32,22 @@ int main (void)
     //check that responder(socket) was succefully created and binded
     if (responder == NULL){
     	printf("Failed to bind to client.");
-    	//clean up in event of an erro
+    	//clean up in event of an error
     	zmq_close(responder);
     	zmq_ctx_destroy(context);
     	return 1;}
     
-    //Loop to see if the supplicant has received a file request from the requester
+    //Loop in order to allow supplicant to provide multiple files instead of exiting after a single transfer
     while(1){
     	//Attemp to recieve file path from requester
     	char path[256];
     	memset(path, 0, 256);
     	zmq_recv(responder, path, 256,0);
     
-    	//Check if anything was received
+    	//Check if a path was received from a requester
     	if (strlen(path) != 0){
     		//Check if we are doing a bandwidth test or transfering a single file
+    		//bandwidth test section
     		if (BANDWIDTH_INCREMENT_TEST == 1){
 		    	//send file to requester
 		    	const char* filename = "ITF";
@@ -62,16 +62,15 @@ int main (void)
 
 		    		int result = send_file_to_requester(responder, path);
 		    		if (result != 0){return -1;}}}
-		//single file transfer
+		//single file transfer section
 		if (BANDWIDTH_INCREMENT_TEST == 0){
 			printf("Supplicant chuck size: %d\n", FILE_CHUNK_SIZE);
 			int result = send_file_to_requester(responder, path);
-			if (result != 0){return -1;}}	
-	}
-	//set path to 0s to avoid reruns
-	memset(path, 0, 256);
-    }
-        //clean up resources
+			if (result != 0){return -1;}}}
+	//set path to 0s to avoid potential reruns
+	memset(path, 0, 256);}
+	
+    //clean up resources
     zmq_close(responder);
     zmq_ctx_destroy(context);
     

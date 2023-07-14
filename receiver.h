@@ -1,13 +1,25 @@
+/**
+* This program is a part of the FSCI program SMURF project 
+*
+* receiver.h - provides additonal functionaly and helper functions for 'request.c'
+* file. Includes various libraries, defines constants, funcitons to aid in file operations
+* and socket handling.
+*
+*@author Noah Jones <noahjones7771031@gmail.com>, <nmjones@lps.umd.edu>
+
+**/
+
+#ifndef RECEIVER_H
+#define RECEIVER_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 
-#define FILE_CHUNK_SIZE 4096 //1MB
+#define FILE_CHUNK_SIZE 1048576 //1MB
 
-
-
-//Variables for program performance
+//Variables for program performance (execution time of file receiving operation)
     struct timeval start_time, end_time;
     double execution_time;
 
@@ -29,8 +41,7 @@ void* connect_to_supplicant(void *context, const char *server_address){
 		zmq_close(socket);
 	}
 	printf("Connection succesful to server at %s\n", server_address);
-	return socket;
-}
+	return socket;}
 	
 //Gets resulting file size in human readable format
 char* getFileSizeH(long size){
@@ -88,5 +99,5 @@ int receive_file_from_device(void *socket,const char *local_path){
                      
     	//PRINT FILE SIZE AND EXECUTION TIME        
     	printf("File of size %s, received from supplicant in  %.2f seconds\n", getFileSizeH(file_size), execution_time);
-	return 0;
-}
+	return 0;}
+#endif 

@@ -92,8 +92,7 @@ int main (int argc, char** argv)
     zmq_close(socket);
     zmq_ctx_destroy(context);
     
-    return 0;
-}
+    return 0;}
 
 
 
