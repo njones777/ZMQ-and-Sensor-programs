@@ -13,5 +13,6 @@ interpocess communiction and networking by providing a lightweigh and flexible f
  if you are doing a muli file-bandwidth test
 
 ### Syntax:
-+ **Make executables** ``` Make ```
-+ 
++ **Make executables:** ``` Make ```
++ **Start supplicant and wait for request(s):** ``` ./zmq_sup ``
++ **Send a file request to the supplicant:** ```./zmq_req 192.168.0.1 /path/to/file/on/supplicant /local/path/to/write/to```
