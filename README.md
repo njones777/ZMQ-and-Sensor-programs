@@ -1,3 +1,5 @@
+### WHY
+---
 The purpose of these programs were to provide the my team with a means of 
 sending files and to help test bandwidth, latency and, program execution time
 across multipel different types of devices. Such devices included, Raspberry Pis,
@@ -9,10 +11,13 @@ interpocess communiction and networking by providing a lightweigh and flexible f
 ### Progam descriptions:
 ---
 + **request.c** - sends request for a file to a listening supplicant in order to receive a file
++ **receiver.h** - header file for request.c to make code look cleaner and provide additonal functionality
 + **supplicant.c** - waits and listens for a file request from a requester in order to provide it with a file or files
  if you are doing a muli file-bandwidth test
++ **sender.h** - header file for supplicant.c to make code cleaner and provide additonal functionality for supplicant
 
 ### Syntax:
+---
 + **Make executables:** ``` Make ```
     + **Compile executables individually:** ``` gcc -o zmq_sup suppliant.c -I./ -lzq ```
 + **Start supplicant and wait for request(s):** ``` ./zmq_sup ```
