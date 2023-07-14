@@ -9,6 +9,6 @@ interpocess communiction and networking by providing a lightweigh and flexible f
 
 ### Progam descriptions:
 ---
-+ ** request.c ** - sends request for a file to a listening supplicant in order to receive a file
-+ ** supplicant.c ** - waits and listens for a file request from a requester in order to provide it with a file or files
++ **request.c** - sends request for a file to a listening supplicant in order to receive a file
++ **supplicant.c** - waits and listens for a file request from a requester in order to provide it with a file or files
  if you are doing a muli file bandwidth test
