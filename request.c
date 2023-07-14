@@ -5,11 +5,12 @@
 * file receiver using ZMQ and a network bandwidth measurment tool
 * to help find and measure potential bottlenecks within networks.
 *
+* This in intended to be run on a manager when it needs data from workers
+* and or sensors. 
+*
 * @author Noah Jones <noahjones7771031@gmail.com>, <nmjones@lps.umd.edu>
+*
 **/
-
-/* This in intended to be run on a manager when it needs data from workers and or sensors. */
-
 #include <zmq.h>
 #include <string.h>
 #include <stdio.h>
@@ -17,8 +18,11 @@
 #include <stdlib.h>
 #include <receiver.h> //ZMQ socket type defined within receiver.h
 
+#define BANDWIDTH_INCREMENT_TEST 0
+#define increment_size 10 //expects a 1GB to be received
+
 /** 
-* When set BANDWIDTH_INCREMENT_TEST to 1 this program expects to 
+* When BANDWIDTH_INCREMENT_TEST is set to 1 this program expects to 
 * receive incrementing file sizesfrom the supplicant.c program 
 * and report on the size of the file and the time it took to 
 * receive and write those file to disk then exit after the number
@@ -40,8 +44,6 @@
 *
 * NOTE: I do intend to implement checksums to verify file integrity in the future.
 **/ 
-#define BANDWIDTH_INCREMENT_TEST 0
-#define increment_size 10
 
 int main (int argc, char** argv)
 {
@@ -54,7 +56,7 @@ int main (int argc, char** argv)
     
     //path of file on remote device
     char *remote_path=argv[2];
-    //path of file we will write to
+    //path of file we will write to locally
     char *local_path=argv[3];
 
     //create zmq_context and bind socket to context

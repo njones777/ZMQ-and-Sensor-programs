@@ -6,7 +6,7 @@
 * and socket handling.
 *
 *@author Noah Jones <noahjones7771031@gmail.com>, <nmjones@lps.umd.edu>
-
+*
 **/
 
 #ifndef SENDER_H

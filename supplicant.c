@@ -10,17 +10,40 @@
 * to tell it that it needs a fresh set of data to run operations on.
 *
 * @author Noah Jones <noahjones7771031@gmail.com>, <nmjones@lps.umd.edu>
-*
 **/
-
 #include <zmq.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <sender.h>
+#include <sender.h> //ZMQ socket type defined withing sender.h
 
 #define BANDWIDTH_INCREMENT_TEST 0
-#define increment_size 10
+#define increment_size 10 //results in a 1Gb file being created and transfered
+
+/**
+* When BANDWIDTH_INCREMENT_TEST is set to 1 this program will create 
+* files with incrementing sizes by powers of 2 to send indiviudally to a
+* requester. Once a file is transfered the supplicant will report on the
+* of the file and the time it took to transfer that file then exit after
+* the number of iterations defined in INCREMENT_SIZE have processed.
+*
+* When BANDWIDTH_INCREMENT_TEST is set to 0 the program will 
+* send only one file the report the files size and how long it
+* took to transfer the file.
+*
+* CAUTION: there are no built in safe guards to check the size of the file the 
+* program is creating, along with that the file are incremented by powers of 2 on the supplicant.
+* The first file will be 2MB and if we set our iteration to 5 you will end up receiving 
+* a 32MB file, 10 iteration will get you a 1GB file, going up to 20 iterations will
+* attempt to send you a 1048 GB file!!!
+
+* In conclusion this program could easily cause a multitude of issues including; 
+* data corrupiton, file system instability, and many other general operating system 
+* errors, So always ensure the increment size is set to a level at which your storage 
+* and file system can handle.
+*
+* NOTE: I do intend to implement checksums to verify file integrity in the future.
+**/
 
 int main (void)
 {
@@ -70,7 +93,7 @@ int main (void)
 	//set path to 0s to avoid potential reruns
 	memset(path, 0, 256);}
 	
-    //clean up resources
+    //clean up zmq resources
     zmq_close(responder);
     zmq_ctx_destroy(context);
     
