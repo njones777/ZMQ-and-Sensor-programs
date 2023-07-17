@@ -45,7 +45,6 @@
 * errors, So always ensure the increment size is set to a level at which your storage 
 * and file system can handle.
 *
-* NOTE: I do intend to implement checksums to verify file integrity in the future.
 **/
 
 int main (void)
