@@ -1,3 +1,14 @@
+/**
+* This program is a part of the FSCI program SMURF project 
+*
+* cksum.h - provides additonal functionaly and helper functions for 'request.c'
+* and 'supplicant.c'. Includes MD5 checksum utilities to verify file integrity
+* of transfered and received files.
+*
+*@author Noah Jones <noahjones7771031@gmail.com>, <nmjones@lps.umd.edu>
+*
+**/
+
 #ifndef GENERAL_H
 #define GENERAL_H
 

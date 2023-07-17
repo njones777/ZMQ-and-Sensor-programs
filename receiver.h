@@ -80,7 +80,7 @@ int receive_file_from_device(void *socket,const char *local_path){
 	//If the file does exist and is able to be opened the server will send back "continue"
 	else if(strcmp(response, "Continue") == 0){}
 
-	//RECORD START TIME OF FILE TRANSFER
+	//RECORD START TIME OF FILE RECEIVING PROCESS
     	gettimeofday(&start_time, NULL);
 	
 	//receive the file size from the client
@@ -98,7 +98,7 @@ int receive_file_from_device(void *socket,const char *local_path){
 	//cleanup
 	fclose(file);
 	
-	//RECORD END TIME OF PROGRAM
+	//RECORD END TIME OF FIEL RECEIVING PROCESS
     	gettimeofday(&end_time, NULL);
     	execution_time = (double)(end_time.tv_sec - start_time.tv_sec) +
                      (double)(end_time.tv_usec - start_time.tv_usec) / 1000000.0;

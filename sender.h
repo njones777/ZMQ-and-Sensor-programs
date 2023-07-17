@@ -136,7 +136,7 @@ int send_file_to_requester(void *socket, char *path){
 	//Cleanup
 	fclose(file);
 	
-	//RECORD END TIME OF PROGRAM
+	//RECORD END TIME OF TRANSFER
     	gettimeofday(&end_time, NULL);
     	execution_time = (double)(end_time.tv_sec - start_time.tv_sec) +
                      (double)(end_time.tv_usec - start_time.tv_usec) / 1000000.0;
