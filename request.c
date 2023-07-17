@@ -12,11 +12,12 @@
 *
 **/
 #include <zmq.h>
-#include <string.h>
+#include <cksum.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <receiver.h> //ZMQ socket type defined within receiver.h
+#include <string.h>
+#include <receiver.h> //ZMQ socket type (pair) defined within receiver.h
 
 #define BANDWIDTH_INCREMENT_TEST 0
 #define increment_size 10 //expects a 1GB to be received
@@ -28,7 +29,7 @@
 * receive and write those file to disk then exit after the number
 * defined in INCREMENT_SIZE have processed.
 *
-* When BANDWIDTH_INCREMENT_TEST is set to 0 the program will 
+* When BANDWIDTH_INCREMENT_TEST is set to 0 the program will x
 * recieve and write only one file to disk then exit.
 *
 * CAUTION: there are no built in safe guards to check the size of the file the 
@@ -47,8 +48,12 @@
 
 int main (int argc, char** argv)
 {
+    const char* syntax="Error: invalid arguments\nSyntax: ./receiver.c <SUPPLICANT_IP_ADDRESS> </Requested/file/path> <Destiantion/file/path\n";
     //check that the IP address, remote file path, and local file path were all provided 
-    if (argc != 4){printf("Error: invalid arguments\nSyntax: ./receiver.c <SUPPLICANT_IP_ADDRESS> </Requested/file/path> <Destiantion/file/path\n");}
+    if (argc != 4){printf("%s", syntax); return 1;}
+    //check that a valid IP address was given
+    const char* ip_address = argv[1];
+   if (validate_ip(ip_address) !=0 ){printf("%sInvalid address: %s\n", syntax, argv[1]); return 1;}
     int port = 8888;
     char server_addr[255];
     strcpy(server_addr, argv[1]);
@@ -84,17 +89,35 @@ int main (int argc, char** argv)
 		//check if file was sucessfully received
 		if (result != 0){return -1;}}}
     
-    //otherwise check if we are requesting a single file from the supplicant
+    /** 
+    * otherwise check if we are requesting a single file from the supplicant
+    * since we are receiving one file we will also receive a MD5 sum of the file from the supplicant
+    * to which we will compare to another MD5 sum that we caluclate on the file after we receive it
+    **/
     else if(BANDWIDTH_INCREMENT_TEST == 0){
+    	//receive MD5 checksum from supplicant
+    	char received_checksum_str[MD5_DIGEST_LENGTH * 2 + 1];
+    	char local_checksum_str[MD5_DIGEST_LENGTH * 2 + 1];
+    	
+    	zmq_recv(socket, &received_checksum_str, sizeof(received_checksum_str), 0);
+	printf("MD5 checksum: %s\n", received_checksum_str);
+	
+	//start receiving file
     	int result = receive_file_from_device(socket, local_path);
     	//check if file was successfully received
-    	if (result!=0){return -1;}}
-    
+    	if (result!=0){return -1;}
+    	
+    	//calculate MD5 checksum for received file and compare to received checksum
+    	if(calc_md5_sum(local_path, local_checksum_str)){
+    		//Check if checksums matched
+    		if(strcmp(received_checksum_str, local_checksum_str) == 0){
+    			printf("Checksums validation complete\n");}
+    		else{printf("File corrupted, Take appropriate Action\n"); return 1;}}}
+    	
     //Cleanup after receiving the file
     zmq_close(socket);
     zmq_ctx_destroy(context);
     
     return 0;}
-
 
 

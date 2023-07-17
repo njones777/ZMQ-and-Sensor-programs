@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <arpa/inet.h>
 
 #define FILE_CHUNK_SIZE 1048576 //1MB
 
@@ -42,8 +43,16 @@ void* connect_to_supplicant(void *context, const char *server_address){
 	}
 	printf("Connection succesful to server at %s\n", server_address);
 	return socket;}
-	
+
+//check if passed IP address was valid
+int validate_ip(const char* ip){
+	struct in_addr addr;
+	if(inet_pton(AF_INET, ip, &(addr.s_addr))==1){return 0;}
+	else{return 1;}}
+
+
 //Gets resulting file size in human readable format
+//Results are rounded
 char* getFileSizeH(long size){
     char* result = (char*)malloc(20 * sizeof(char)); // Allocate memory for the result string
     if (size < 1024) {
@@ -57,8 +66,7 @@ char* getFileSizeH(long size){
     }
 
     return result;}
-
-
+	
 int receive_file_from_device(void *socket,const char *local_path){
 	
 	//Check for repsonse from supplicant on status of file
@@ -71,8 +79,6 @@ int receive_file_from_device(void *socket,const char *local_path){
 	return -1;}
 	//If the file does exist and is able to be opened the server will send back "continue"
 	else if(strcmp(response, "Continue") == 0){}
-
-
 
 	//RECORD START TIME OF FILE TRANSFER
     	gettimeofday(&start_time, NULL);
@@ -101,3 +107,6 @@ int receive_file_from_device(void *socket,const char *local_path){
     	printf("File of size %s, received from supplicant in  %.2f seconds\n", getFileSizeH(file_size), execution_time);
 	return 0;}
 #endif 
+
+
+

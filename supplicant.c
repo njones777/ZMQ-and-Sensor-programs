@@ -10,12 +10,15 @@
 * to tell it that it needs a fresh set of data to run operations on.
 *
 * @author Noah Jones <noahjones7771031@gmail.com>, <nmjones@lps.umd.edu>
+*
 **/
 #include <zmq.h>
+#include <cksum.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <sender.h> //ZMQ socket type defined withing sender.h
+#include <sender.h> //ZMQ socket type (pair) defined withing sender.h
+
 
 #define BANDWIDTH_INCREMENT_TEST 0
 #define increment_size 10 //results in a 1Gb file being created and transfered
@@ -86,8 +89,17 @@ int main (void)
 		    		int result = send_file_to_requester(responder, path);
 		    		if (result != 0){return -1;}}}
 		//single file transfer section
+		//single file transfer will include a MD5 checksum value
 		if (BANDWIDTH_INCREMENT_TEST == 0){
 			printf("Supplicant chuck size: %d\n", FILE_CHUNK_SIZE);
+			//calculate MD5 checksum for 
+			char checksum_str[MD5_DIGEST_LENGTH * 2 + 1];
+			if(calc_md5_sum(path, checksum_str)){
+			printf("MD5 checksum for %s: %s\n",path, checksum_str);
+			//send MD5 sum to requester before we start to send it the file
+			zmq_send(responder, checksum_str, sizeof(checksum_str), 0);
+			}
+			
 			int result = send_file_to_requester(responder, path);
 			if (result != 0){return -1;}}}
 	//set path to 0s to avoid potential reruns

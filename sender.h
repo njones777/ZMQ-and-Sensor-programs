@@ -21,6 +21,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <openssl/md5.h>
 
 // size of chunks that will be sent during file transfer
 // should be set lower for less powerful devies (raspbery pis and other related devices)
@@ -51,7 +52,6 @@ int genfile(const char* filename, off_t size){
     close(fd);
     return 0;}
     
-    
 //Gets resulting file size in human readable format
 //Results are rounded
 char* getFileSizeH(long size){
@@ -67,7 +67,7 @@ char* getFileSizeH(long size){
     }
 
     return result;}
-
+    
 //Function that handles socket creation and binding to help make main code cleaner
 void* bind_socket(void *context, const char *server_address){
 	void *socket = zmq_socket(context, ZMQ_PAIR);
