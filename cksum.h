@@ -9,8 +9,8 @@
 *
 **/
 
-#ifndef GENERAL_H
-#define GENERAL_H
+#ifndef CKSUM_H
+#define CKSUM_H
 
 #include <stdio.h>
 #include <openssl/md5.h>
