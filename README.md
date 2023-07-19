@@ -11,6 +11,7 @@ interpocess communiction and networking by providing a lightweigh and flexible f
 ## Key Terms:
 ---
 **RF** - Radio Frequency
+
 **FFT** - An algorithm that computes the discrete Fourier transform (DFT) of a sequence, or its inverse (IDFT)
 
 ### Progam descriptions:
