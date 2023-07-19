@@ -1,8 +1,7 @@
 ### Why:
 ---
-The purpose of this direcotry is to provide the sensors in this project a means of transfering files to a more computationally powerful computer
-These files and directories are meant to be on a sensor, usually a Raspberry PI, to collect RF signals, prcess them into CSV files using a FFT program and send them off to a archiver for further operations that the sensors themselves are not equiped to do. 
-
+The purpose of this direcotry is to provide the sensors in this project a means of transfering files to a more computationally powerful computer.
+The contents of this directory are meant to be on a sensor, usually a Raspberry PI, to collect RF signals, prcess them into CSV files using a FFT program and send them off to a archiver for further operations that the sensors themselves are not equiped to do. 
 
 ### Pogram and Directory description:
 ---
