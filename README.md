@@ -23,8 +23,8 @@ interpocess communiction and networking by providing a lightweigh and flexible f
     + CSVs/ - This diretory holds the .csv files that are created from the .raw files.
     + records/ - THis directory holds the actual catalogger code to send files off to the archivist and calculate checksums for the sent files
       * rpi_catalogger.c - This is the main code for the catalogger project, It has rpi in the name becuase the code was mainly used on Raspberry PIs (Raspberry PI 3s to be specific). This code is to be called from the **watch.sh** script. In this code the address for the archivist is staticly defined, for future rendentions I plan on adding argument passed addressed in the future. It also defines the path of the CSV file it will send off.
-        * catalogger.h - This helper function provides the request handshake, file transfer, and socket creation for the **rpi_catalogger.c** program.
-          * chksum.h - This helper function is implemented in the **catalogger.h** header file and provices md5checksumming to the .csv file that will be sent to the archivist to ensure file integrity across transfers.
+      * catalogger.h - This helper function provides the request handshake, file transfer, and socket creation for the **rpi_catalogger.c** program.
+      * chksum.h - This helper function is implemented in the **catalogger.h** header file and provices md5checksumming to the .csv file that will be sent to the archivist to ensure file integrity across transfers.
 + **supplicant.c** - waits and listens for a file request from a requester in order to provide it with a file or files
  if you are doing a muli file-bandwidth test
 + **sender.h** - header file for supplicant.c to make code cleaner and provide additonal functionality for supplicant
