@@ -9,7 +9,6 @@ distributed and scalable applications. It helped to simply the complexity of our
 interpocess communiction and networking by providing a lightweigh and flexible framework.
 
 ## Key Terms:
----
 **RF** - Radio Frequency
 
 **FFT** - An algorithm that computes the discrete Fourier transform (DFT) of a sequence, or its inverse (IDFT)
