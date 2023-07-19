@@ -1,3 +1,11 @@
+### Why:
+---
+The purpose of this direcotry is to provide the sensors in this project a means of transfering files to a more computationally powerful computer
+These files and directories are meant to be on a sensor, usually a Raspberry PI, to collect RF signals, prcess them into CSV files using a FFT program and send them off to a archiver for further operations that the sensors themselves are not equiped to do. 
+
+
+### Pogram and Directory description:
+---
 + **watch.sh** - This bash script is the main program for the catalogger. It expects a radio station as its first argument  and once started started this script will begin collection RF data to a .raw file using the rtl_fm software package. after it has collected a predefined size of data, defined within the bash script, it will stop the collection process and calls the **convertFM.py** program to convert the .raw data a .csv file using FFT. Once this file is created the script will call the catalog executable in records/  within catalogger/ to send the newly created .csv file to the archiver. Syntax: `bash watch.sh 97.9`
 + **raw_data/** - This directory holds the .raw data that the watch.sh script collects. After the .raw files are converted to .csv files they are deleted
 + **CSVs/** - This diretory holds the .csv files that are created from the .raw files.
