@@ -1,10 +1,10 @@
 #!/bin/bash
 
 
-file="output.wav"
+file="output.bin"
 
 #begin collecting on command line specified channel
-( rtl_fm -M wbfm -f $1M | sox -t raw -e signed-integer -b 16 -c 1 -r 44100 - $file ) > /dev/null 2>&1 &
+( rtl_fm -M wbfm -r 48000 -f $1M $file ) > /dev/null 2>&1 &
 echo rtl_fm started
 
 #infinite loop to check size of sensor data file
@@ -20,8 +20,8 @@ do
 			kill -9 "$pid"
 			echo process killed
 		done
-		python3 wavs/batch_fft.py output.wav 2048 0
-		mv fft_audio.csv CSVs/
+		python3 wavs/convertFM.py $1 2000
+		mv fft_radio.csv CSVs/
 		rm $file
 		./records/catalog
 		
@@ -29,4 +29,3 @@ do
 	fi
 		#after the file has been written to the specific size we now run FFT on it
 done
-

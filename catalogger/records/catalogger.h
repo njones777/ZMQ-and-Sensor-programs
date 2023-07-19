@@ -1,3 +1,14 @@
+/**
+* This program is a part of the FSCI program SMURF project 
+*
+* catalogger.h - provides additonal functionaly and helper functions for 'rpi_catalogger.c'
+* file. Includes various libraries, defines constants, funcitons to aid in file operations
+* and socket handling.
+*
+*@author Noah Jones <noahjones7771031@gmail.com>, <nmjones@lps.umd.edu>
+*
+**/
+
 #ifndef CATALOGGER_H
 #define CATALOGGER_H
 
@@ -7,15 +18,18 @@
 #include <string.h>
 #include <cksum.h>
 #include <pthread.h>
-//#include <openssl/md5.h>
 
+// size of chunks that will be sent during file transfer
+// should be set lower for less powerful devies (raspbery pis and other related devices)
 #define FILE_CHUNK_SIZE 4096
-#define BUFFER_SIZE 256
+
+// string value to send to archiver/archival.c to get approval to send file
 #define REQUEST "request for archive"
+// string value we expect to get back from archival.c
 #define APPROVE "request approved"
 
-
 //Function that handles socket creation and binding to help make main code cleaner
+//Will return pointer to socket object in event of succesful connection
 void* connect_to_archivist(void *context, const char *server_address){
 	//create socket and attempt to connect to provided context
 	void *socket = zmq_socket(context, ZMQ_PAIR);
@@ -37,17 +51,14 @@ void* connect_to_archivist(void *context, const char *server_address){
 	//zmq_send(socket, message, strlen(message), 0);
 	return socket;}
 	
-	
-	
-//function to receive requested file and attempt to send requested file back
+//Function to conduct request handshake, send file, and calculate md5sum for file integrity validation
 int send_file_to_archivist(void *socket, char *path){
 
-	//Check if sensor has or can even open file before initiating request
+	//Check if sensor has or can even open file before initiating request handshake
 	FILE* file = fopen(path, "rb");
 	if (file == NULL){
 		printf("Unable to open %s\n", path);
-		return -1;
-		}
+		return -1;}
 
 	printf("sending %s to archivist\n", REQUEST);
 	//send message asking if archivist is alive and ready to recieve an archive file
@@ -65,6 +76,7 @@ int send_file_to_archivist(void *socket, char *path){
     	char checksum_str[MD5_DIGEST_LENGTH * 2 + 1];
     	if(calc_md5_sum(path, checksum_str)){
 	printf("MD5 checksum for %s: %s\n",path, checksum_str);
+	
 	//send MD5 sum to requester before we start to send it the file
 	zmq_send(socket, checksum_str, sizeof(checksum_str), 0);}
 	
@@ -72,8 +84,6 @@ int send_file_to_archivist(void *socket, char *path){
 	//Begin actual file transfer//
 	//////////////////////////////
 	
-	
-	//FILE* file = fopen(path, "rb");
 	//move the file position indicator to the end of the file specified by the FILE pointer file
 	fseek(file, 0, SEEK_END);
 	//determine the current position of the file position indicator
@@ -96,15 +106,4 @@ int send_file_to_archivist(void *socket, char *path){
 	//Cleanup
 	fclose(file);
 	return 0;}
-
-
-
-
-
-
-
-
-
-
-
 #endif
