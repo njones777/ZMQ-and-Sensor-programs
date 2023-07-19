@@ -20,7 +20,7 @@ do
 			kill -9 "$pid"
 			echo process killed
 		done
-		python3 wavs/convertFM.py $1 2000
+		python3 raw_data/convertFM.py $1 2000
 		mv fft_radio.csv CSVs/
 		rm $file
 		./records/catalog
