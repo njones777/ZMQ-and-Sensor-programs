@@ -7,7 +7,7 @@
 // Replace this with the archivists address
 #define ARCHIVIST_ADDRESS "tcp://169.254.2.52:8888" 
 // Path of CSV file to send to archivist
-#define CSV_PATH "CSVs/fft_audio.csv"
+#define CSV_PATH "CSVs/fft_radio.csv"
 
 
 int main() {

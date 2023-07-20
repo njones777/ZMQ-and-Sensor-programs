@@ -34,9 +34,9 @@ sample_points = 1000
 full_sample_points = True # Use ALL sample points in file?
 collection_rate = 1008000
 sample_rate = 48000
-plot_signal = True
-plot_fft = True
-save_sound = True
+plot_signal = False
+plot_fft = False
+save_sound = False
 zero_zero = False # Set norm at frequency zero to zero in FFT? (Makes it more readable)
 save_csv = True
 # ----------------

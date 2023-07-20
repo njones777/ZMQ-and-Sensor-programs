@@ -8,15 +8,19 @@ a high-peformance messaging library that provides sockets and patterns for build
 distributed and scalable applications. It helped to simply the complexity of our projects
 interpocess communiction and networking by providing a lightweigh and flexible framework.
 
-### Key Terms:
+### Progam descriptions:
 ---
-**RF** - Radio Frequency
++ **archiver** - contains file to run the archiver program. This is a 
++ **receiver.h** - header file for request.c to make code look cleaner and provide additonal functionality
++ **supplicant.c** - waits and listens for a file request from a requester in order to provide it with a file or files
+ if you are doing a muli file-bandwidth test
++ **sender.h** - header file for supplicant.c to make code cleaner and provide additonal functionality for supplicant
 
-**FFT** - An algorithm that computes the discrete Fourier transform (DFT) of a sequence, or its inverse (IDFT)
-
-### Directory descriptions:
+### Syntax:
 ---
-+ **archiver/** - Contains file and directories to run the archiver program. The archiver is a file collection program that is always waiting for sensors, the cataloggers, to send it CSV files produced from RF signal collection that has been turned into a CSV though a FFT program. 
-+ **catalogger/** - This contains files and directories to run the catalogger program. The catalogger is a data collection program that will routinley collect RF singal data, run a FFT program on the collected RF data to convert it to a CSV file, and send it to the archiver for further operations.
-+ **benchmarking/** - This directory contains programs to test the bandwidth of multiples devices using ZMQ to transfer files of increasing size. During our project we used these programs to help find bottlenecks within our sensor network in order to optimize it for practical use. 
-
++ **Make executables:** ``` Make ```
+    + **Compile executables individually:** ``` gcc -o zmq_sup suppliant.c -I./ -lzq ```
++ **Start supplicant and wait for request(s):** ``` ./zmq_sup ```
++ **Send a file request to the supplicant:** ```./zmq_req 192.168.0.1 /path/to/file/on/supplicant /local/path/to/write/to```
+   + The requester expects the ip address of the supplicant, the path of the file on the supplicant you are requesting
+     and the local path you want the requester to write to.

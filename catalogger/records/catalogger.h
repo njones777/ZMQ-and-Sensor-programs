@@ -19,6 +19,10 @@
 #include <cksum.h>
 #include <pthread.h>
 
+// File name partiuclar to this device
+// THIS IS USUALLY HARD CODED
+#define ID "A"
+
 // size of chunks that will be sent during file transfer
 // should be set lower for less powerful devies (raspbery pis and other related devices)
 #define FILE_CHUNK_SIZE 4096
@@ -27,6 +31,7 @@
 #define REQUEST "request for archive"
 // string value we expect to get back from archival.c
 #define APPROVE "request approved"
+
 
 //Function that handles socket creation and binding to help make main code cleaner
 //Will return pointer to socket object in event of succesful connection
@@ -46,9 +51,6 @@ void* connect_to_archivist(void *context, const char *server_address){
 	}
 	printf("Connection succesful to archivist at %s\n", server_address);
 	
-	//sanity check
-	//char message[]="hello";
-	//zmq_send(socket, message, strlen(message), 0);
 	return socket;}
 	
 //Function to conduct request handshake, send file, and calculate md5sum for file integrity validation
@@ -60,7 +62,6 @@ int send_file_to_archivist(void *socket, char *path){
 		printf("Unable to open %s\n", path);
 		return -1;}
 
-	printf("sending %s to archivist\n", REQUEST);
 	//send message asking if archivist is alive and ready to recieve an archive file
    	zmq_send(socket, REQUEST, strlen(REQUEST), 0);
     
@@ -72,10 +73,14 @@ int send_file_to_archivist(void *socket, char *path){
 	//check if a request for archival has been sent
 	if(strcmp(response, APPROVE) != 0){return -1;}
     
+    	//send file name to archivist with distinction
+    	//const char* message = "A";
+    	zmq_send(socket, ID, strlen(ID), 0);
+    
     	//calculate and send MD5 checksum to archivist for file integrity validation
     	char checksum_str[MD5_DIGEST_LENGTH * 2 + 1];
     	if(calc_md5_sum(path, checksum_str)){
-	printf("MD5 checksum for %s: %s\n",path, checksum_str);
+	//printf("MD5 checksum for %s: %s\n",path, checksum_str);
 	
 	//send MD5 sum to requester before we start to send it the file
 	zmq_send(socket, checksum_str, sizeof(checksum_str), 0);}
