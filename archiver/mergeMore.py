@@ -6,19 +6,19 @@ import glob
 import os
 
 #setting the path for joining multiple files
-files = os.path.join('CSV_ARCHIVE', 'test*.csv')
+files = os.path.join('CSV_ARCHIVE', '*.csv')
 
 #list of merged files returned
 files = glob.glob(files)
 
-print("Merged CSV:")
+#print("Merged CSV:")
 
 #joining files with concat and read_csv
 df = pd.concat(map(pd.read_csv, files), ignore_index = True)
-print(df)
+#print(df)
 
 
-df.to_csv('CSV_STAGED/merge.csv', index = False)
+df.to_csv('CSV_STAGED/merged.csv', index = False)
 
 
 

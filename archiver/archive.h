@@ -2,20 +2,29 @@
 #define ARCHIVE_H
 
 #include <zmq.h>
+#include <file.h>
 #include <stdio.h>
 #include <cksum.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <socket.h>
 
-
+#define MAXLEN 512
 #define FILE_CHUNK_SIZE 4096
+//port to connect to manager
+#define archiver_to_manager_port 8888
 #define REQUEST "request for archive"
 #define APPROVE "request approved"
-#define CSV_FILE_LIMIT 5
-//#define PARTIAL_PATH "CSV_ARCHIVE/test"
-
+//address of manager
+#define MANAGER_ADDR "10.10.40.227"
+//archivist wireless ip address to connect to manager
+#define ARCHIVER_WIRELESS_IP "10.10.40.207"
+//how many csv files to collect before merging them and sending to manager
+#define CSV_FILE_LIMIT 10
+//where the merged CSV file will go
+#define CSV_LOCAL_PATH "CSV_STAGED/merged.csv"
 
 
 int receive_file_from_catalogger(void *socket, int file_counter);
@@ -44,12 +53,73 @@ void *thread_gather_archives(void *arg){
 			int res = receive_file_from_catalogger(socket, file_counter);
 			file_counter++;
 		}
-		else{printf("there are %d CSVs thats too many\n", csvs);}
+		else{}
 	}
 	/*zmq_close(socket);
 	zmq_ctx_destroy(context);
 	return NULL;*/
 }
+
+void *extract_archive() {
+   while(1){
+	 int csvs = csv_count();
+	 if (csvs >= CSV_FILE_LIMIT){
+	 system("python3 mergeMore.py");
+	 //printf("CSV LIMIT REACHED SENDING MERGED CSV");
+	 system("rm CSV_ARCHIVE/*");
+	  
+	    char server_addr[MAXLEN];
+	    char host[55];
+	    gethostname(host, sizeof(host));
+	    host[MAXLEN - 1] = '\0';
+	    sprintf(server_addr, "tcp://%s:%d", MANAGER_ADDR, archiver_to_manager_port);
+	    printf("(client, manager) = (%s, %s)\n", host, server_addr);
+
+	    // Create context
+	    void *context=zmq_ctx_new();
+
+	    // Attempt to connect to public socket
+	    void* public = connect_to_supplicant(context, server_addr);
+
+	    // Check if socket returned NULL
+	    if (public == NULL){
+	    	printf("ERROR 1 Failed to connect to server.");
+	    	zmq_close(public);
+	    	zmq_ctx_destroy(context);
+	    }
+
+	    // Attempt to bind private socket
+	    void *client = bind_socket(context, "tcp://*:8888");
+	    	char path[256];
+		char sendbuffer[MAXLEN];
+	    	memset(path, 0, 256);
+
+		// Set file path
+		strcpy(path, CSV_LOCAL_PATH);
+
+		if (strlen(path) != 0){
+				//calculate MD5 checksum for 
+				char checksum_str[MD5_DIGEST_LENGTH * 2 + 1];
+				if(calc_md5_sum(path, checksum_str)){
+				printf("MD5 checksum for %s: %s\n",path, checksum_str);
+
+		    // Send MD5 sum to manager before we start to send it the file
+		    sprintf(sendbuffer, "client;checksum;%s;%s",ARCHIVER_WIRELESS_IP , checksum_str);
+				zmq_send(public, sendbuffer, sizeof(sendbuffer), 0);
+				}
+		    
+		    zmq_close(public);
+				
+		    // Begins to send file to manager
+				int result = send_file_to_requester(client, path);
+				if (result != 0){printf("FILE NOT SENT");}}
+		    
+		//set path to 0s to avoid potential reruns
+		memset(path, 0, 256);
+	    
+	    zmq_close(client);
+	    zmq_ctx_destroy(context);
+	    return 0;}}}
 
 int receive_file_from_catalogger(void *socket, int file_counter){
 	
@@ -71,14 +141,13 @@ int receive_file_from_catalogger(void *socket, int file_counter){
 	char RPbuffer[2];
 	zmq_recv(socket, &RPbuffer, sizeof(RPbuffer)-1, 0);
 	
-	//See what we receive
-	printf("Received %s\n", RPbuffer);
 	//modif received file distinction with directory, iteration number and file type
 	sprintf(LOCAL_PATH, "%s%s%d%s","CSV_ARCHIVE/", RPbuffer, file_counter, ".csv");
-	printf("Path to write to: %s\n", LOCAL_PATH);
+	//printf("Path to write to: %s\n", LOCAL_PATH);
 	
-	size_t sb = strlen(LOCAL_PATH) + 1;
-	printf("size of local path is: %zu bytes\n", sb);
+	//get size in bytes of local path to write received CSV to
+	/*size_t sb = strlen(LOCAL_PATH) + 1;
+	printf("size of local path is: %zu bytes\n", sb);*/
 	
 	//receive MD5 checksum from catalogger
     	char received_checksum_str[MD5_DIGEST_LENGTH * 2 + 1];
@@ -89,9 +158,8 @@ int receive_file_from_catalogger(void *socket, int file_counter){
 	
 	
 	//Receive file size from a catalogger
-	long file_size;
-	zmq_recv(socket, &file_size, sizeof(long), 0);
-	
+	int file_size;
+	zmq_recv(socket, &file_size, sizeof(int), 0);
 	//recieve the file content in chunks
 	char buffer[FILE_CHUNK_SIZE];
 	size_t remaining_bytes = file_size;

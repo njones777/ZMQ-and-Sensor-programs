@@ -1,0 +1,29 @@
+Performs an FFT on radio frequency (FM) data from rtl_fm. Data input is a .bin file (called "output.bin" -- sorry!) and data output is a CSV file called fft_radio.csv.
+Luke Wilson
+
+-------
+To use:
+
+1. Make sure rtl_fm installed ("sudo apt-get install rtl_rm")
+
+2. Install the fftw3 C library with "sudo apt-get install libfftw3-dev"
+
+3. Navigate to the current directory (duh!)
+
+4. Run "make"
+
+5. Run "./convertFM 91.5 2000", for example. This will write the "station" column to 91.5 and will truncate the FFT output, showing frequencies no higher than 2000 Hz. This can be useful, if, for example, you want to listen for music. Most notes we hear in music fall below 2000 Hz.
+
+-------
+
+Output format:
+A CSV file like the following...
+
+station,frequency,norm
+91.5,0.0,700.5
+91.5,6.7,451.0
+91.5,13.4,560.1
+...
+91.5,1998.8,12.0
+
+
