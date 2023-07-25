@@ -96,7 +96,7 @@ int send_file_to_archivist(void *socket, char *path){
 	//reset file position indicatior to the beginning of the file 
 	rewind(file);
 	
-	printf("FILE SIZE IS %ld\n", file_size);
+	//printf("FILE SIZE IS %ld\n", file_size);
 	//send the file size to the receiver
 	zmq_send(socket, &file_size, sizeof(long), 0);
 	

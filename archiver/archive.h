@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <socket.h>
+#include <zmq_helpers.h>
 
 #define MAXLEN 512
 #define FILE_CHUNK_SIZE 4096
@@ -18,74 +19,129 @@
 #define REQUEST "request for archive"
 #define APPROVE "request approved"
 //address of manager
-#define MANAGER_ADDR "10.10.40.227"
+//#define MANAGER_ADDR "10.10.40.227"
+#define MANAGER_ADDR "169.254.2.39"
 //archivist wireless ip address to connect to manager
-#define ARCHIVER_WIRELESS_IP "10.10.40.207"
+//#define ARCHIVER_WIRELESS_IP "10.10.40.207"
+#define ARCHIVER_WIRELESS_IP "169.254.2.52"
 //how many csv files to collect before merging them and sending to manager
 #define CSV_FILE_LIMIT 10
 //where the merged CSV file will go
 #define CSV_LOCAL_PATH "CSV_STAGED/merged.csv"
 
+//struct containining paramaters to send to sensors
+struct RPI_params{
+	const char* port;
+	float frequency;
+	int batch;
+};
 
 int receive_file_from_catalogger(void *socket, int file_counter);
 int csv_count();
 
 
 // function for thread(s) to handle socket
-void *thread_gather_archives(void *arg){
-	char *port = (char *)arg;
+void *thread_gather_archives(void* arg){
 	
+	//receive struct
+	struct RPI_params* params = (struct RPI_params*)arg;
 	
 	void *context=zmq_ctx_new();
 	void *socket = zmq_socket(context, ZMQ_PAIR);
 	
-	int rc = zmq_bind(socket, port);
+	int rc = zmq_bind(socket, params->port);
 	
 	if (rc !=0){
 		perror("Error binding socket");
 		return NULL;
 		}
+		
+	//send paramters to pi
+	//send frequency
+	char fbuffer[20];
+	char bbuffer[10];
+	snprintf(fbuffer, sizeof(fbuffer), "%f", params->frequency);
+	snprintf(bbuffer, sizeof(bbuffer), "%d", params->batch);
+	zmq_send(socket, fbuffer, sizeof(fbuffer), 0);
+	//send batch size
+	zmq_send(socket, bbuffer, sizeof(bbuffer), 0); 
 	
-	int file_counter = 0;
+	int csvs=0;
 	while(1){
-		int csvs = csv_count();
-		if (csvs < CSV_FILE_LIMIT){
-			int res = receive_file_from_catalogger(socket, file_counter);
-			file_counter++;
-		}
-		else{}
+		int res = receive_file_from_catalogger(socket, csvs);
+		if (res == 0){csvs++;}
+		if (csvs==params->batch){break;}
 	}
-	/*zmq_close(socket);
+	zmq_close(socket);
 	zmq_ctx_destroy(context);
-	return NULL;*/
 }
+
+void* connect_to_manager(){
+	char server_addr[MAXLEN];
+	char host[55];
+	gethostname(host, sizeof(host));
+	host[MAXLEN - 1] = '\0';
+	sprintf(server_addr, "tcp://%s:%d", MANAGER_ADDR, archiver_to_manager_port);
+	printf("(client, manager) = (%s, %s)\n", host, server_addr);
+	void *context=zmq_ctx_new();
+	void* public = connect_to_supplicant(context, server_addr);
+
+	// Check if socket returned NULL
+	if (public == NULL){
+	    printf("ERROR 1 Failed to connect to server.");
+	    zmq_close(public);
+	    zmq_ctx_destroy(context);
+	}
+	// Attempt to bind private socket
+		void *client = bind_socket(context, "tcp://*:8888");
+		char sendbuffer[MAXLEN];
+		sprintf(sendbuffer, "client;checkin;%s;%s",ARCHIVER_WIRELESS_IP, "archiver");
+		zmq_send(public, sendbuffer, sizeof(sendbuffer), 0);
+		sleep(1);
+		sprintf(sendbuffer, "client;request");
+		zmq_send(public, sendbuffer, sizeof(sendbuffer), 0);
+		zmq_close(public);
+	return client;
+}
+
+void get_params_from_manager(void *socket, char* freq, char* batch){
+	char params[64];
+	zmq_recv(socket, params, sizeof(params), 0);
+	int numtokens;
+	char** split_params=splitStringOnSemiColons(params, &numtokens);
+	freq=split_params[0];
+	batch=split_params[1];
+	
+	}
+	
+	
 
 void *extract_archive() {
    while(1){
 	 int csvs = csv_count();
 	 if (csvs >= CSV_FILE_LIMIT){
-	 system("python3 mergeMore.py");
-	 //printf("CSV LIMIT REACHED SENDING MERGED CSV");
-	 system("rm CSV_ARCHIVE/*");
+		 system("python3 mergeMore.py");
+	 	//printf("CSV LIMIT REACHED SENDING MERGED CSV");
+	 	system("rm CSV_ARCHIVE/*");
 	  
-	    char server_addr[MAXLEN];
-	    char host[55];
-	    gethostname(host, sizeof(host));
-	    host[MAXLEN - 1] = '\0';
-	    sprintf(server_addr, "tcp://%s:%d", MANAGER_ADDR, archiver_to_manager_port);
-	    printf("(client, manager) = (%s, %s)\n", host, server_addr);
+	    	char server_addr[MAXLEN];
+	    	char host[55];
+	    	gethostname(host, sizeof(host));
+	    	host[MAXLEN - 1] = '\0';
+	    	sprintf(server_addr, "tcp://%s:%d", MANAGER_ADDR, archiver_to_manager_port);
+	    	printf("(client, manager) = (%s, %s)\n", host, server_addr);
 
-	    // Create context
-	    void *context=zmq_ctx_new();
+	    	// Create context
+	    	void *context=zmq_ctx_new();
 
-	    // Attempt to connect to public socket
-	    void* public = connect_to_supplicant(context, server_addr);
+	    	// Attempt to connect to public socket
+	    	void* public = connect_to_supplicant(context, server_addr);
 
-	    // Check if socket returned NULL
-	    if (public == NULL){
-	    	printf("ERROR 1 Failed to connect to server.");
-	    	zmq_close(public);
-	    	zmq_ctx_destroy(context);
+	    	// Check if socket returned NULL
+	    	if (public == NULL){
+	    		printf("ERROR 1 Failed to connect to server.");
+	    		zmq_close(public);
+	    		zmq_ctx_destroy(context);
 	    }
 
 	    // Attempt to bind private socket
