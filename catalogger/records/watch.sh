@@ -25,7 +25,7 @@ do
 			kill -9 $pid
 		done
 		#converted output.bin file to a csv using fft
-		../raw_data/convertFM frequency 2000
+		../raw_data/convertFM $frequency 2000
 		#move generated CSV to CSV directory to be sent off
 		mv fft_radio.csv ../CSVs/
 		#delete ouput.bin

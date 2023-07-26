@@ -9,10 +9,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 
 
 #define MFILE_CHUNK_SIZE 1048576 //1MB
+//#define MFILE_CHUNK_SIZE 4096
 #define BUFFER_SIZE 256
 
 //Send file over zmq to requester
@@ -43,25 +45,35 @@ int send_file_to_requester(void *socket, char *path){
 	//move the file position indicator to the end of the file specified by the FILE pointer file
 	fseek(file, 0, SEEK_END);
 	//determine the current position of the file position indicator
-	long file_size = ftell(file);
+	int file_size = ftell(file);
+	printf("File size is %d\n", file_size);
 	//reset file position indicatior to the beginning of the file 
 	rewind(file);
 	
 	//send the file size to the receiver
-	zmq_send(socket, &file_size, sizeof(long), 0);
+	zmq_send(socket, &file_size, sizeof(int), 0);
 	
 	//send the file content in chunks
 	char buffer[MFILE_CHUNK_SIZE];
 	size_t remaining_bytes = file_size;
 	while (remaining_bytes > 0) {
 		size_t chunk_size = fread(buffer, sizeof(char), MFILE_CHUNK_SIZE, file);
+		printf("Remaining file size: %zu\n", remaining_bytes);
 		zmq_send(socket, buffer, chunk_size, 0);
 		remaining_bytes -= chunk_size;
+		//sleep(1);
 	}
 	//Cleanup
 	fclose(file);
 	
 	return 0;}
+
+
+
+
+
+
+
 
 // Recieves file over zmq from sender
 int receive_file_from_device(void *socket,const char *local_path){

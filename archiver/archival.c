@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <archive.h>
+#include <stdlib.h>
 
 
 #define RPI1_port "tcp://169.254.2.52:8887"
@@ -15,27 +16,32 @@ int main(){
 	params2.port=(char *)RPI2_port;
 	void *manager_socket=connect_to_manager();
 	//empty variables for frequency and batch in structs
-	char frequency[10];
-	char batch[4];
-	get_params_from_manager(manager_socket, frequency, batch);	
-	printf("Frequency: %s, Batch: %s\n", frequency, batch);
+	char *frequency;
+	char *batch;
+	while(1){
+		get_params_from_manager(manager_socket, &frequency, &batch);	
+		printf("Frequency: %s\nBatch: %s\n", frequency, batch);
 		
-		//Initialize the struct
-		//initializeStruct(pi_params);
-
+		params2.frequency=atof(frequency);
+		params2.batch=atoi(batch);
+		params1.frequency=atof(frequency);
+		params1.batch=atoi(batch);
+		
 		//create threads
-		//pthread_t thread2;
-		//pthread_t thread1, thread2, thread3;
-		//pthread_create(&thread1, NULL, thread_gather_archives, (void *)&params1);
-		//pthread_create(&thread2, NULL, thread_gather_archives, (void *)&params2);
-		//pthread_create(&thread3, NULL, extract_archive, NULL);
+		pthread_t thread1, thread2;
+		pthread_create(&thread1, NULL, thread_gather_archives, (void *)&params1);
+		pthread_create(&thread2, NULL, thread_gather_archives, (void *)&params2);
 		
-		//wait for threads to finish, even though they won't
-		//pthread_join(thread1, NULL);
-		//pthread_join(thread2, NULL);
-		//pthread_join(thread3, NULL); */
-	
-	
+		//join threads	
+		pthread_join(thread1, NULL);
+		pthread_join(thread2, NULL);
+		
+		//After the sensor collection threads have finished begin the 
+		//Merger thread and send the merged CSV to the manager
+		extract_archive(manager_socket);
+		//zmq_close(manager_socket);
+		printf("COMPLETED\n");
+	}
 	return 0;
 }
 

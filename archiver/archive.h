@@ -24,8 +24,6 @@
 //archivist wireless ip address to connect to manager
 //#define ARCHIVER_WIRELESS_IP "10.10.40.207"
 #define ARCHIVER_WIRELESS_IP "169.254.2.52"
-//how many csv files to collect before merging them and sending to manager
-#define CSV_FILE_LIMIT 10
 //where the merged CSV file will go
 #define CSV_LOCAL_PATH "CSV_STAGED/merged.csv"
 
@@ -37,7 +35,7 @@ struct RPI_params{
 };
 
 int receive_file_from_catalogger(void *socket, int file_counter);
-int csv_count();
+
 
 
 // function for thread(s) to handle socket
@@ -104,78 +102,47 @@ void* connect_to_manager(){
 	return client;
 }
 
-void get_params_from_manager(void *socket, char* freq, char* batch){
+void get_params_from_manager(void *socket, char** freq, char** batch){
 	char params[64];
 	zmq_recv(socket, params, sizeof(params), 0);
 	int numtokens;
 	char** split_params=splitStringOnSemiColons(params, &numtokens);
-	freq=split_params[0];
-	batch=split_params[1];
-	
+	*freq=split_params[0];
+	*batch=split_params[1];
 	}
 	
 	
 
-void *extract_archive() {
-   while(1){
-	 int csvs = csv_count();
-	 if (csvs >= CSV_FILE_LIMIT){
-		 system("python3 mergeMore.py");
-	 	//printf("CSV LIMIT REACHED SENDING MERGED CSV");
-	 	system("rm CSV_ARCHIVE/*");
-	  
-	    	char server_addr[MAXLEN];
-	    	char host[55];
-	    	gethostname(host, sizeof(host));
-	    	host[MAXLEN - 1] = '\0';
-	    	sprintf(server_addr, "tcp://%s:%d", MANAGER_ADDR, archiver_to_manager_port);
-	    	printf("(client, manager) = (%s, %s)\n", host, server_addr);
+void *extract_archive(void* arg) {
+	void* socket = arg;
+	system("python3 mergeMore.py");
+	//printf("CSV LIMIT REACHED SENDING MERGED CSV");
+	system("rm CSV_ARCHIVE/*");
+	 	
+	char path[256];
+	char sendbuffer[MAXLEN];
+	memset(path, 0, 256);
 
-	    	// Create context
-	    	void *context=zmq_ctx_new();
+	// Set file path
+	strcpy(path, CSV_LOCAL_PATH);
 
-	    	// Attempt to connect to public socket
-	    	void* public = connect_to_supplicant(context, server_addr);
+	if (strlen(path) != 0){
+		//calculate MD5 checksum for 
+		char checksum_str[MD5_DIGEST_LENGTH * 2 + 1];
+		if(calc_md5_sum(path, checksum_str)){
+		printf("MD5 checksum for %s: %s\n",path, checksum_str);
 
-	    	// Check if socket returned NULL
-	    	if (public == NULL){
-	    		printf("ERROR 1 Failed to connect to server.");
-	    		zmq_close(public);
-	    		zmq_ctx_destroy(context);
-	    }
-
-	    // Attempt to bind private socket
-	    void *client = bind_socket(context, "tcp://*:8888");
-	    	char path[256];
-		char sendbuffer[MAXLEN];
-	    	memset(path, 0, 256);
-
-		// Set file path
-		strcpy(path, CSV_LOCAL_PATH);
-
-		if (strlen(path) != 0){
-				//calculate MD5 checksum for 
-				char checksum_str[MD5_DIGEST_LENGTH * 2 + 1];
-				if(calc_md5_sum(path, checksum_str)){
-				printf("MD5 checksum for %s: %s\n",path, checksum_str);
-
-		    // Send MD5 sum to manager before we start to send it the file
-		    sprintf(sendbuffer, "client;checksum;%s;%s",ARCHIVER_WIRELESS_IP , checksum_str);
-				zmq_send(public, sendbuffer, sizeof(sendbuffer), 0);
-				}
-		    
-		    zmq_close(public);
+		// Send MD5 sum to manager before we start to send it the file
+		zmq_send(socket, checksum_str, sizeof(checksum_str), 0);
+				}    
 				
-		    // Begins to send file to manager
-				int result = send_file_to_requester(client, path);
-				if (result != 0){printf("FILE NOT SENT");}}
+		// Begins to send file to manager
+		int result = send_file_to_requester(socket, path);
+		if (result != 0){printf("FILE NOT SENT");}}
 		    
-		//set path to 0s to avoid potential reruns
-		memset(path, 0, 256);
-	    
-	    zmq_close(client);
-	    zmq_ctx_destroy(context);
-	    return 0;}}}
+	//set path to 0s to avoid potential reruns
+	memset(path, 0, 256);
+	return 0;}
 
 int receive_file_from_catalogger(void *socket, int file_counter){
 	
@@ -239,33 +206,6 @@ int receive_file_from_catalogger(void *socket, int file_counter){
 	}
 	
 return 0;}
-
-
-int csv_count(){
-// Replace this with the path to your directory
-    const char* directoryPath = "/home/nmjones/Desktop/ZMQ_git/ZMQ-and-Sensor-programs/archiver/CSV_ARCHIVE"; 
-    int csvFileCount = 0;
-
-    DIR* directory = opendir(directoryPath);
-    if (directory == NULL) {
-        perror("Error opening directory");
-        return -1;
-    }
-
-    struct dirent* entry;
-    while ((entry = readdir(directory)) != NULL) {
-        if (entry->d_type == DT_REG) { // Check if it's a regular file
-            const char* fileName = entry->d_name;
-            size_t fileNameLength = strlen(fileName);
-
-            // Check if the file ends with ".csv"
-            if (fileNameLength > 4 && strcmp(&fileName[fileNameLength - 4], ".csv") == 0) {
-                csvFileCount++;}}}
-
-    closedir(directory);
-
-    return csvFileCount;}
-
 
 #endif
 
