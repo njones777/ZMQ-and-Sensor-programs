@@ -46,7 +46,7 @@ int send_file_to_requester(void *socket, char *path){
 	fseek(file, 0, SEEK_END);
 	//determine the current position of the file position indicator
 	int file_size = ftell(file);
-	printf("File size is %d\n", file_size);
+	//printf("File size is %d\n", file_size);
 	//reset file position indicatior to the beginning of the file 
 	rewind(file);
 	
@@ -58,7 +58,7 @@ int send_file_to_requester(void *socket, char *path){
 	size_t remaining_bytes = file_size;
 	while (remaining_bytes > 0) {
 		size_t chunk_size = fread(buffer, sizeof(char), MFILE_CHUNK_SIZE, file);
-		printf("Remaining file size: %zu\n", remaining_bytes);
+		//printf("Remaining file size: %zu\n", remaining_bytes);
 		zmq_send(socket, buffer, chunk_size, 0);
 		remaining_bytes -= chunk_size;
 		//sleep(1);
