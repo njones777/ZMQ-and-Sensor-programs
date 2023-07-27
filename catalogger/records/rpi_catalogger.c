@@ -31,16 +31,19 @@ int main() {
     char frequency[10];
     char batch[4];
     int ibatch;
+    float ffrequency;
     //receive frequency
     zmq_recv(sender, frequency, sizeof(frequency), 0);
     //receive batch size
     zmq_recv(sender, batch, sizeof(batch), 0);
     
-    //conver batch to integer
+    //convert batch to integer
     ibatch=atoi(batch);
+    //convert frequency to float
+    ffrequency=atof(frequency);
     
     char command[32];
-    sprintf(command, "bash watch.sh %s", frequency);
+    sprintf(command, "bash watch.sh %.1f", ffrequency);
     //start bash script
     int i=0;
     for(i;i<ibatch;i++){
