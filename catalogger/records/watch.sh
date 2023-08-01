@@ -4,14 +4,19 @@
 #file our rtl_fm command will output to
 file="output.bin"
 frequency=$1
+max_frequency=$2
 rf="${frequency}m"
 
-#infinite loop to run rtl_fm with different frequencys
+#check for running rtl_fm proccesses and kill them before starting this rtl_fm command
+#this helps prevent multiple rtl_fm proccesses from being run which would render the 
+#rtl_sdr antenna unsuable
+pids=$(pgrep -f "rtl_fm")
+for pid in $pids; do
+	kill -9 $pid
+done
 
 #begin collecting on command line specified channel
 ( rtl_fm -M wbfm -r 48000 -f $rf $file ) > /dev/null 2>&1 &
-#rtl_fm -M wbfm -r 48000 -f $rf $file &
-#echo rtl_fm started
 while true
 do
 	#check if file exits and if it is greater than 500KB
@@ -19,13 +24,11 @@ do
 		# use pgrep to get the process IDs of the running processes with the given filename
 		pids=$(pgrep -f "rtl_fm")
 		for pid in $pids; do
-			#ps aux | awk -v pid="$pid" '$2 == pid { print }'
 			#kill rtl_fm process
-			#kill -INT "$pid" #> /dev/null 2>&1
-			kill -9 $pid
+			kill -15 $pid
 		done
 		#converted output.bin file to a csv using fft
-		../raw_data/convertFM $frequency 2000
+		../raw_data/convertFM $frequency $max_frequency
 		#move generated CSV to CSV directory to be sent off
 		mv fft_radio.csv ../CSVs/
 		#delete ouput.bin

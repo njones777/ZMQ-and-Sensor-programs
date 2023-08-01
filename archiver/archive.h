@@ -32,10 +32,11 @@ struct RPI_params{
 	const char* port;
 	float frequency;
 	int batch;
+	int max_frequency;
 };
 
 int receive_file_from_catalogger(void *socket, int file_counter);
-
+void initializMyStruct(struct RPI_params *PiParams);
 
 
 // function for thread(s) to handle socket
@@ -58,18 +59,30 @@ void *thread_gather_archives(void* arg){
 	//send frequency
 	char fbuffer[20];
 	char bbuffer[10];
+	char mfbuffer[10];
 	snprintf(fbuffer, sizeof(fbuffer), "%f", params->frequency);
 	snprintf(bbuffer, sizeof(bbuffer), "%d", params->batch);
+	snprintf(mfbuffer, sizeof(mfbuffer), "%d", params->max_frequency);
+	
+	//send frequency
 	zmq_send(socket, fbuffer, sizeof(fbuffer), 0);
 	//send batch size
 	zmq_send(socket, bbuffer, sizeof(bbuffer), 0); 
+	//send max frequency size
+	zmq_send(socket, mfbuffer, sizeof(mfbuffer), 0);
 	
+	//count number of received CSVs
 	int csvs=0;
 	while(1){
+		//result of receive file operation
 		int res = receive_file_from_catalogger(socket, csvs);
+		//if we received a file increment number of received CSVs
 		if (res == 0){csvs++;}
+		//if we have as many CSVs are request by the client hen break from this loop
 		if (csvs==params->batch){break;}
 	}
+
+	//clean up resources used to connect to sensors
 	zmq_close(socket);
 	zmq_ctx_destroy(context);
 }
@@ -102,13 +115,15 @@ void* connect_to_manager(){
 	return client;
 }
 
-void get_params_from_manager(void *socket, char** freq, char** batch){
+void get_params_from_manager(void *socket, char** freq1, char** freq2, char** batch, char** max_freq){
 	char params[64];
 	zmq_recv(socket, params, sizeof(params), 0);
 	int numtokens;
 	char** split_params=splitStringOnSemiColons(params, &numtokens);
-	*freq=split_params[0];
-	*batch=split_params[1];
+	*freq1=split_params[0];
+	*freq2=split_params[1];
+	*batch=split_params[2];
+	*max_freq=split_params[3];
 	}
 	
 	
